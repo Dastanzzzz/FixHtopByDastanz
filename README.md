@@ -127,38 +127,33 @@ aml-s9xx-htop/
 
 # Automated Installation
 
-Example `install.sh`:
+The installation script will automatically install the custom htop package.
 
-```
-#!/bin/bash
+Run:
 
-set -e
+    chmod +x install.sh
 
-echo "Installing custom htop..."
+    sudo ./install.sh
 
-apt update
-apt install -y libsensors5
+After installation, verify:
 
-dpkg -i packages/htop-custom_3.6.0-1_arm64.deb
+    htop -V
 
-echo "Installation completed"
+Run htop:
 
-htop -V
-```
+    htop
+
+Temperature monitoring should appear automatically.
+
+---
 
 After reinstalling Armbian:
 
-```
-git clone https://github.com/YOUR_USERNAME/aml-s9xx-htop.git
+    git clone https://github.com/YOUR_USERNAME/aml-s9xx-htop.git
 
-cd aml-s9xx-htop
+    cd aml-s9xx-htop
 
-chmod +x install.sh
-
-sudo ./install.sh
-```
-
----
+    sudo ./install.sh
 
 # Build Information
 
