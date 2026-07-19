@@ -1,136 +1,321 @@
-# htop Build untuk Amlogic STB / Armbian
+# htop Custom Build for Amlogic STB / Armbian
 
-Custom build **htop** dengan dukungan sensor Linux agar temperatur CPU/STB dapat tampil langsung di htop.
+Custom **htop build with lm-sensors support** for Amlogic-based STB devices running Armbian.
 
-Repository: [Dastanzzzz/FixHtopByDastanz](https://github.com/Dastanzzzz/FixHtopByDastanz)
+This project provides a ready-to-install Debian package (`.deb`) so the custom htop build can be restored quickly after reinstalling Armbian.
 
-## Tested On
+## Features
 
-- Armbian Trixie
-- STB berbasis Amlogic S9xx
-- Arsitektur ARM64
-- Sensor berbasis `hwmon`, termasuk `scpi_sensors`
+This custom build enables:
 
-## Kenapa Perlu Custom Build?
+* Linux hwmon sensor support
+* lm-sensors integration
+* Amlogic SCPI thermal sensor detection
+* CPU temperature monitoring inside htop
 
-Paket `htop` bawaan repository Armbian/Debian belum tentu menyertakan dukungan `lm-sensors`. Akibatnya, suhu CPU mungkin tidak tampil di htop walaupun sensor telah tersedia di sistem.
+No need to run:
 
-Build ini mengaktifkan:
+```
+HTOP_DEBUG=1 htop
+```
 
-- Dukungan `lm-sensors`
-- Pembacaan temperatur melalui `hwmon`
-- Dukungan sensor Amlogic/SCPI
-- Tampilan temperatur CPU pada meter CPU htop
+Temperature will appear automatically.
 
-Contoh sensor yang dapat terbaca:
+---
 
-```text
+# Tested Environment
+
+| Component          | Information            |
+| ------------------ | ---------------------- |
+| Device             | Amlogic S9xx based STB |
+| OS                 | Armbian Trixie         |
+| Architecture       | ARM64 / aarch64        |
+| Kernel             | Linux 6.x              |
+| Sensor Driver      | SCPI sensors           |
+| Temperature Source | hwmon                  |
+
+---
+
+# Why Custom Build?
+
+Some repository versions of htop are built without sensor support.
+
+Without sensor support:
+
+* CPU temperature does not appear in htop
+* lm-sensors integration is unavailable
+
+This build was compiled with:
+
+```
+(Linux) sensors: yes
+```
+
+so htop can read:
+
+```
+/sys/class/hwmon/
+```
+
+Example sensor:
+
+```
 scpi_sensors
-temp1_input
+└── temp1_input
 ```
 
-## Instalasi
+Example value:
 
-### 1. Install Git
-
-```bash
-sudo apt update
-sudo apt install -y git
+```
+39000
 ```
 
-### 2. Clone Repository
+means:
 
-```bash
-git clone https://github.com/Dastanzzzz/FixHtopByDastanz.git
-cd FixHtopByDastanz
+```
+39°C
 ```
 
-### 3. Jalankan Installer
+---
 
-```bash
-chmod +x install.sh
-sudo ./install.sh
+# Installation (Recommended)
+
+## Install From Debian Package
+
+Download the package:
+
+```
+htop-custom_3.6.0-1_arm64.deb
 ```
 
-Installer akan memasang dependensi yang dibutuhkan lalu mengompilasi htop dengan dukungan sensor.
+Install:
 
-## Dependensi
-
-Dependensi berikut akan diinstal otomatis oleh `install.sh`:
-
-```text
-libsensors-dev
-libncurses-dev
-build-essential
-autoconf
-automake
-pkg-config
+```
+sudo dpkg -i htop-custom_3.6.0-1_arm64.deb
 ```
 
-## Verifikasi
+Verify:
 
-Setelah proses instalasi selesai, jalankan:
+```
+htop -V
+```
 
-```bash
+Run:
+
+```
 htop
 ```
 
-Temperatur CPU seharusnya tampil langsung tanpa perlu menjalankan:
+Temperature should appear automatically.
 
-```bash
-HTOP_DEBUG=1
+---
+
+# Repository Structure
+
+Recommended repository layout:
+
+```
+aml-s9xx-htop/
+|
+├── README.md
+├── install.sh
+└── packages/
+    └── htop-custom_3.6.0-1_arm64.deb
 ```
 
-Jika temperatur belum tampil, buka konfigurasi htop:
+---
 
-```text
-F2 → Display options → Also show CPU temperature
+# Automated Installation
+
+Example `install.sh`:
+
+```
+#!/bin/bash
+
+set -e
+
+echo "Installing custom htop..."
+
+apt update
+apt install -y libsensors5
+
+dpkg -i packages/htop-custom_3.6.0-1_arm64.deb
+
+echo "Installation completed"
+
+htop -V
 ```
 
-## Cek Sensor dari Terminal
+After reinstalling Armbian:
 
-Pastikan sensor dapat dibaca oleh sistem:
-
-```bash
-sensors
 ```
+git clone https://github.com/YOUR_USERNAME/aml-s9xx-htop.git
 
-Untuk memeriksa sensor SCPI secara langsung:
-
-```bash
-cat /sys/class/hwmon/hwmon*/name
-cat /sys/class/hwmon/hwmon*/temp1_input
-```
-
-Nilai pada `temp1_input` biasanya menggunakan satuan milidegree Celsius.
-
-Contoh:
-
-```text
-55000
-```
-
-Artinya temperatur perangkat sekitar **55°C**.
-
-## Setelah Install Ulang Armbian
-
-Jika STB di-install ulang, cukup jalankan kembali perintah berikut:
-
-```bash
-sudo apt update
-sudo apt install -y git
-
-git clone https://github.com/Dastanzzzz/FixHtopByDastanz.git
-cd FixHtopByDastanz
+cd aml-s9xx-htop
 
 chmod +x install.sh
+
 sudo ./install.sh
 ```
 
-Setelah selesai, htop dengan dukungan pembacaan temperatur akan kembali seperti sebelumnya.
+---
 
-## Catatan
+# Build Information
 
-- Build ini ditujukan terutama untuk STB Amlogic S9xx berbasis Armbian ARM64.
-- Tampilan suhu tetap bergantung pada driver kernel dan sensor `hwmon` yang tersedia pada perangkat.
-- Pastikan sensor seperti `scpi_sensors` terdeteksi pada sistem.
+Current package:
+
+```
+htop-custom_3.6.0-1_arm64.deb
+```
+
+Source version:
+
+```
+htop 3.6.0-dev-3.5.2-5-gd4297a4
+```
+
+Build configuration:
+
+```
+(Linux) sensors: yes
+```
+
+---
+
+# Manual Build
+
+Only needed if rebuilding from source.
+
+Install dependencies:
+
+```
+sudo apt update
+
+sudo apt install -y \
+build-essential \
+autoconf \
+automake \
+pkg-config \
+libsensors-dev \
+libncurses-dev \
+git
+```
+
+Clone htop:
+
+```
+git clone https://github.com/htop-dev/htop.git
+
+cd htop
+```
+
+Generate build files:
+
+```
+./autogen.sh
+```
+
+Configure:
+
+```
+./configure
+```
+
+Verify:
+
+```
+(Linux) sensors: yes
+```
+
+Compile:
+
+```
+make -j$(nproc)
+```
+
+Install:
+
+```
+sudo make install
+```
+
+---
+
+# Troubleshooting
+
+## Check Sensor Availability
+
+Run:
+
+```
+sensors
+```
+
+Expected:
+
+```
+scpi_sensors-isa-0000
+
+aml_thermal:
+temp1_input: 38.0°C
+```
+
+---
+
+## Check hwmon
+
+Run:
+
+```
+ls -l /sys/class/hwmon/
+```
+
+Expected:
+
+```
+hwmon0 -> scpi_sensors
+```
+
+---
+
+## Check Temperature Value
+
+Run:
+
+```
+cat /sys/class/hwmon/hwmon0/temp1_input
+```
+
+Example:
+
+```
+38000
+```
+
+Meaning:
+
+```
+38°C
+```
+
+---
+
+# Purpose
+
+This repository is intended as a recovery package for Amlogic STB devices.
+
+After reinstalling Armbian or replacing storage, the custom htop temperature monitoring setup can be restored without recompiling.
+
+Installation only requires:
+
+```
+dpkg -i htop-custom_3.6.0-1_arm64.deb
+```
+
+---
+
+# License
+
+This repository contains build scripts and packaging files.
+
+htop itself is licensed under the GNU General Public License (GPL).
